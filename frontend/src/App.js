@@ -7,20 +7,19 @@ import { useState } from "react";
 
 function App() {
 
-  const [showLogin, setShowLogin] = useState(false);
+  const [page, setPage] = useState("login");
 
   return (
     <div>
       <h1>StudySprout</h1>
       
-      <button onClick={() => setShowLogin(!showLogin)}>
-        {showLogin ? "Go to Timer" : "Go to Login"}
+      <button onClick={() => setPage(page === "login" ? "timer" : "login")}>
+        Switch Page
       </button>
 
-      <Timer />
-
-      {showLogin && <Login />}
-    </div>
+    {page === "login" && <Login />}
+    {page === "timer" && <Timer />}
+    </div>  
   );
 }
 
