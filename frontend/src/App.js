@@ -7,18 +7,20 @@ import { useState } from "react";
 
 function App() {
 
-  const [page, setPage] = useState("login");
+  const [page, setPage] = useState(
+    localStorage.getItem("token") ? "timer" : "login"
+  )
 
   return (
     <div>
       <h1>StudySprout</h1>
-      
-      <button onClick={() => setPage(page === "login" ? "timer" : "login")}>
-        Switch Page
-      </button>
 
-    {page === "login" && <Login />}
-    {page === "timer" && <Timer />}
+    {page === "login" && <Login onLogin={() => setPage("timer")} />}
+    {page === "timer" && <Timer onLogout={() => {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+      setPage("login")
+    }} />}
     </div>  
   );
 }

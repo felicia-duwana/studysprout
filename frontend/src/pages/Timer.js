@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import useSessions from "../hooks/useSessions";
 
-function Timer() {
+function Timer({ onLogout }) {
+  const { sessions, fetchSessions } = useSessions()
   useEffect(() => {
 const start = document.getElementById('start');
 const stop = document.getElementById('stop');
@@ -30,8 +32,18 @@ const startTimer = () => {
       clearInterval(interval);
       interval = null;
       alert("Time is up! Session is over");
-        timeLeft = 1500;
-        updateTimer();
+
+      // when timer hits 0, automatically save a session
+      const token = localStorage.getItem("token")
+      fetch("http://localhost:4000/api/v1/sessions/save", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      }).then(() => fetchSessions())
+        
+      timeLeft = 1500;
+      updateTimer();
     }
   }, 1000);
 };
@@ -61,7 +73,7 @@ return () => {
   reset.removeEventListener("click", resetTimer);
   clearInterval(interval);
 };
-  }, []);
+  }, [fetchSessions]);
 
   return (
     <div>
@@ -71,6 +83,18 @@ return () => {
       <button id="start">Start</button>
       <button id="stop">Stop</button>
       <button id="reset">Reset</button>
+      <button onClick={onLogout}>Logout</button>
+
+      <h3>Past Sessions</h3>
+      {sessions.length === 0
+        ? <p>No sessions yet!</p>
+        : sessions.map(session => (
+          <p key={session._id}>
+            {new Date(session.createdAt).toLocaleDateString()} - {session.duration} minutes
+          </p>
+        ))
+      }
+
     </div>
   );
 }

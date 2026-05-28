@@ -1,6 +1,6 @@
 import {useState} from "react";
 
-function Login() {
+function Login({ onLogin }) {
     const [isLogin, setIsLogin] = useState(true);
 
     const [username, setUsername] = useState("");
@@ -11,7 +11,7 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const url = isLogin ? "http://localhost:8000/api/v1/users/login" : "http://localhost:8000/api/v1/users/register";
+        const url = isLogin ? "http://localhost:4000/api/v1/users/login" : "http://localhost:4000/api/v1/users/register";
 
         const body = isLogin
             ? { email, password }
@@ -32,7 +32,11 @@ function Login() {
 
             if (response.ok) {
                 setMessage(isLogin ? "Login successful!" : "Register successful!");
-                console.log(data.user);
+                if (isLogin) {
+                    localStorage.setItem("token", data.token)
+                    localStorage.setItem("user", JSON.stringify(data.user))
+                    onLogin()
+                }
             
             } else {
                 setMessage(data.message || "Oh no!An error occurred.");
