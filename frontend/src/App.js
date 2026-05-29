@@ -1,5 +1,6 @@
 
 
+import './App.css';
 import Login from './pages/Login';
 import Timer from './pages/Timer';
 
@@ -12,7 +13,7 @@ function App() {
   )
 
   return (
-    <div>
+    <div className="App">
       <h1>StudySprout</h1>
 
     {page === "login" && <Login onLogin={() => setPage("timer")} />}

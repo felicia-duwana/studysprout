@@ -1,100 +1,92 @@
-import { useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useSessions from "../hooks/useSessions";
+import { apiPath } from "../api";
 
 function Timer({ onLogout }) {
-  const { sessions, fetchSessions } = useSessions()
-  useEffect(() => {
-const start = document.getElementById('start');
-const stop = document.getElementById('stop');
-const reset = document.getElementById('reset');
-const timerDisplay = document.getElementById('timer');
+  const { sessions, fetchSessions } = useSessions();
+  const [timeLeft, setTimeLeft] = useState(1500);
+  const intervalRef = useRef(null);
 
-let timeLeft = 1500;
-let interval;
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainder = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainder.toString().padStart(2, "0")}`;
+  };
 
-const updateTimer = () => {
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
+  const saveSession = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  timerDisplay.innerHTML = 
-  `${minutes.toString().padStart(2, '0')}:
-  ${seconds.toString().padStart(2, '0')}`;
-};
+    await fetch(apiPath("/api/v1/sessions/save"), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-const startTimer = () => {
-  if (interval) return;
+    fetchSessions();
+  };
 
-  interval = setInterval(() => {
-    timeLeft--;
-    updateTimer();
+  const startTimer = () => {
+    if (intervalRef.current) return;
 
-    if (timeLeft === 0) {
-      clearInterval(interval);
-      interval = null;
-      alert("Time is up! Session is over");
-
-      // when timer hits 0, automatically save a session
-      const token = localStorage.getItem("token")
-      fetch("http://localhost:4000/api/v1/sessions/save", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
+    intervalRef.current = setInterval(() => {
+      setTimeLeft((current) => {
+        if (current <= 1) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+          alert("Time is up! Session is over");
+          saveSession();
+          return 1500;
         }
-      }).then(() => fetchSessions())
-        
-      timeLeft = 1500;
-      updateTimer();
-    }
-  }, 1000);
-};
 
-const stopTimer = () => {
-  clearInterval(interval);
-  interval = null;
-};
+        return current - 1;
+      });
+    }, 1000);
+  };
 
-const resetTimer = () => {
-  clearInterval(interval);
-  interval = null;
-  
-  timeLeft = 1500;
-  updateTimer();
-}
+  const stopTimer = () => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  };
 
-start.addEventListener("click", startTimer);
-stop.addEventListener("click", stopTimer);
-reset.addEventListener("click", resetTimer);
-   
-updateTimer();
+  const resetTimer = () => {
+    stopTimer();
+    setTimeLeft(1500);
+  };
 
-return () => {
-  start.removeEventListener("click", startTimer);
-  stop.removeEventListener("click", stopTimer);
-  reset.removeEventListener("click", resetTimer);
-  clearInterval(interval);
-};
+  useEffect(() => {
+    fetchSessions();
+    return () => stopTimer();
   }, [fetchSessions]);
 
   return (
-    <div>
+        <div className="timer-page">
+          <div className="timer-card"> <button className="top-logout" onClick={onLogout}>Logout</button>
+            <h1>Track your sessions now!</h1>
+        <div className="timer-circle">
+          <span className="timer-display">{formatTime(timeLeft)}</span>
+        </div>
 
-      <h2 id="timer">25:00</h2>
+        <div className="timer-controls">
+          <button className="timer-button" onClick={startTimer}>Start</button>
+          <button className="timer-button" onClick={stopTimer}>Stop</button>
+          <button className="timer-button" onClick={resetTimer}>Reset</button>
+        </div>
+      </div>
 
-      <button id="start">Start</button>
-      <button id="stop">Stop</button>
-      <button id="reset">Reset</button>
-      <button onClick={onLogout}>Logout</button>
-
-      <h3>Past Sessions</h3>
-      {sessions.length === 0
-        ? <p>No sessions yet!</p>
-        : sessions.map(session => (
-          <p key={session._id}>
-            {new Date(session.createdAt).toLocaleDateString()} - {session.duration} minutes
-          </p>
-        ))
-      }
-
+      <section className="sessions-card">
+        <h3>Past Sessions</h3>
+        {sessions.length === 0 ? (
+          <p>No sessions yet!</p>
+        ) : (
+          sessions.map((session) => (
+            <p key={session._id} className="session-item">
+              {new Date(session.createdAt).toLocaleDateString()} - {session.duration} minutes
+            </p>
+          ))
+        )}
+      </section>
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import {useState} from "react";
+import { useState } from "react";
+import { apiPath } from "../api";
 
 function Login({ onLogin }) {
     const [isLogin, setIsLogin] = useState(true);
@@ -11,7 +12,9 @@ function Login({ onLogin }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const url = isLogin ? "http://localhost:4000/api/v1/users/login" : "http://localhost:4000/api/v1/users/register";
+        const url = isLogin
+            ? apiPath("/api/v1/users/login")
+            : apiPath("/api/v1/users/register");
 
         const body = isLogin
             ? { email, password }

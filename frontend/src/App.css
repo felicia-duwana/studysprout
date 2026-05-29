@@ -1,38 +1,98 @@
 .App {
   text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
   min-height: 100vh;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  background: #eafcf0;
+  color: #1b3c1a;
+  font-family: 'Press Start 2P', monospace;
 }
 
-.App-link {
-  color: #61dafb;
+.timer-page {
+  width: min(100%, 720px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.card {
+  width: 100%;
+  max-width: 560px;
+  padding: 2rem;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 3px dashed #9ee3b2;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.timer-circle {
+  width: 260px;
+  height: 260px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #d7ffe4;
+  border: 8px solid #ffffff;
+  box-shadow: inset 0 0 0 1px #ccefd4, 0 10px 20px rgba(0,0,0,0.08);
+}
+
+.timer-display {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #2f5b30;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+button {
+  border: 2px solid #99e3a6;
+  border-radius: 14px;
+  padding: 0.7rem 1.2rem;
+  font-weight: bold;
+  background: #f6fff3;
+  color: #1c4b22;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #eaffea;
+  transform: translateY(-2px);
+}
+
+.top-logout {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  border: 2px solid #9ee3b2;
+  background: #ffffff;
+  color: #2f6b33;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.sessions-card {
+  width: 100%;
+  max-width: 560px;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 2px dashed #bde8b8;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.session-item {
+  margin: 0.5rem 0;
+  color: #496c45;
 }
