@@ -1,0 +1,63 @@
+.sunflower-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.sunflower {
+  width: 110px;
+  image-rendering: pixelated;
+  animation: cute-bounce 2.6s steps(4, end) infinite;
+  transform-origin: center bottom;
+}
+
+.sunflower-seed .sunflower {
+  width: 98px;
+  filter: brightness(0.92);
+}
+
+.sunflower-sprout .sunflower {
+  width: 104px;
+}
+
+.sunflower-bud .sunflower {
+  width: 112px;
+}
+
+.sunflower-half .sunflower {
+  width: 118px;
+}
+
+.sunflower-full .sunflower {
+  width: 124px;
+}
+
+@keyframes cute-bounce {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  15% {
+    transform: translate(-1px, -3px) rotate(-1deg) scale(1.01);
+  }
+  30% {
+    transform: translate(1px, 0) rotate(0deg) scale(0.99);
+  }
+  45% {
+    transform: translate(-1px, -2px) rotate(1deg) scale(1.02);
+  }
+  60% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+  75% {
+    transform: translate(1px, -1px) rotate(-1deg) scale(1.01);
+  }
+  90% {
+    transform: translate(0, 0) rotate(1deg) scale(1);
+  }
+}
+
+.sunflower:hover .sunflower {
+  filter: drop-shadow(0 0 10px #ffd36b);
+  transition: filter 0.2s ease;
+}

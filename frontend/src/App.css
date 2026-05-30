@@ -12,21 +12,66 @@
 }
 
 .timer-page {
-  width: min(100%, 720px);
+  width: min(100%, 820px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
 }
 
-.card {
+.timer-card {
   width: 100%;
-  max-width: 560px;
   padding: 2rem;
   border-radius: 20px;
   background: #ffffff;
   border: 3px dashed #9ee3b2;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.timer-content {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.4rem;
+  flex-wrap: wrap;
+}
+
+.timer-left {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-left: 1rem;
+}
+
+.timer-right {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.plant-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #3c6e34;
+  letter-spacing: 0.05em;
+  text-transform: capitalize;
+}
+
+@media (max-width: 860px) {
+  .timer-layout {
+    justify-content: center;
+  }
+
+  .timer-left,
+  .timer-card {
+    max-width: 100%;
+  }
 }
 
 .timer-circle {
