@@ -10,6 +10,14 @@ const sessionSchema = new Schema(
         duration: {
             type: Number,
             default: 25
+        },
+        flowerSpecies: {
+            type: String,
+            required: true
+        },
+        flowerRarity: {
+            type: String,
+            required: true
         }
     },
     { timestamps: true }

@@ -12,7 +12,7 @@ const useSessions = () => {
             }
         })
         .then(res => res.json())
-        .then(data => setSessions(data.sessions))
+        .then(data => setSessions(data.sessions || []))
     }, [])
 
     useEffect(() => {

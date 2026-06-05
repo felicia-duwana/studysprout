@@ -7,7 +7,9 @@ function Timer({ onLogout }) {
   const { sessions, fetchSessions } = useSessions();
   const [timeLeft, setTimeLeft] = useState(1500);
   const [isRunning, setIsRunning] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState(25);
   const intervalRef = useRef(null);
+  const startTimeRef = useRef(null);
   const endTimeRef = useRef(null);
 
   const formatTime = (seconds) => {
@@ -33,6 +35,7 @@ function Timer({ onLogout }) {
   const startTimer = () => {
     if (intervalRef.current || isRunning) return;
 
+    startTimeRef.current = Date.now();
     endTimeRef.current = Date.now() + timeLeft * 1000;
     setIsRunning(true);
 
@@ -47,7 +50,7 @@ function Timer({ onLogout }) {
         setIsRunning(false);
         alert("Time is up! Session is over");
         saveSession();
-        setTimeLeft(1500);
+        setTimeLeft(customMinutes * 60);
       }
     }, 1000);
   };
@@ -61,11 +64,12 @@ function Timer({ onLogout }) {
 
   const resetTimer = () => {
     stopTimer();
-    setTimeLeft(1500);
+    setTimeLeft(customMinutes * 60);
   };
 
   const growthStages = ["seed", "sprout", "bud", "half", "full"];
-  const stageIndex = Math.min(4, Math.floor((1500 - timeLeft) / 300));
+  const elapsed = startTimeRef.current ? Math.floor((Date.now() - startTimeRef.current) / 1000) : 0;
+  const stageIndex = Math.min(4, Math.max(0, Math.floor(elapsed / 300))); 
   const stage = growthStages[stageIndex];
 
   useEffect(() => {
@@ -86,6 +90,19 @@ function Timer({ onLogout }) {
               </div>
 
               <div className="timer-right">
+                <div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="60"
+                    value={customMinutes}
+                    onChange={(e) => setCustomMinutes(Number(e.target.value))}
+                  />
+                  <button onClick={() => {
+                    stopTimer()
+                    setTimeLeft(customMinutes * 60)
+                  }}>Set Timer</button>
+                </div>
                 <div className="timer-circle">
                   <span className="timer-display">{formatTime(timeLeft)}</span>
                 </div>
