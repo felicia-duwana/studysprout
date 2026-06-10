@@ -18,15 +18,19 @@ function Timer({ onLogout }) {
     return `${minutes.toString().padStart(2, "0")}:${remainder.toString().padStart(2, "0")}`;
   };
 
-  const saveSession = async () => {
+  const saveSession = async (duration) => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     await fetch(apiPath("/api/v1/sessions/save"), {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ 
+        duration,
+       }),
     });
 
     fetchSessions();
@@ -49,7 +53,7 @@ function Timer({ onLogout }) {
         endTimeRef.current = null;
         setIsRunning(false);
         alert("Time is up! Session is over");
-        saveSession();
+        saveSession(customMinutes);
         setTimeLeft(customMinutes * 60);
       }
     }, 1000);
@@ -68,8 +72,10 @@ function Timer({ onLogout }) {
   };
 
   const growthStages = ["seed", "sprout", "bud", "half", "full"];
+  const totalDuration = customMinutes * 60;
   const elapsed = startTimeRef.current ? Math.floor((Date.now() - startTimeRef.current) / 1000) : 0;
-  const stageIndex = Math.min(4, Math.max(0, Math.floor(elapsed / 300))); 
+  const progress = Math.min(1, elapsed / totalDuration);
+  const stageIndex = Math.min(4, Math.floor(progress * 5)); 
   const stage = growthStages[stageIndex];
 
   useEffect(() => {

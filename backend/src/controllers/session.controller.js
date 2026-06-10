@@ -26,12 +26,14 @@ const saveSession = async (req, res) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
+        const { duration } = req.body
+
         const sessionCount = await Session.countDocuments({ user: decoded.id })
         const flower = getFlowerForSession(sessionCount)
 
         const session = await Session.create({
             user: decoded.id,
-            duration: 25,
+            duration,
             flowerSpecies: flower.species,
             flowerRarity: flower.rarity
         })
