@@ -141,3 +141,37 @@ button:hover {
   margin: 0.5rem 0;
   color: #496c45;
 }
+
+.dashboard-card {
+  width: 100%;
+  max-width: 560px;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 2px dashed #bde8b8;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.dashboard-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.stat-box {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: white;
+  border-radius: 10px;
+}
+
+.stat-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3c6e34;
+}
+
+.stat-label {
+  font-size: 12px;
+  opacity: 0.7;
+}

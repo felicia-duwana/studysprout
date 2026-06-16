@@ -83,6 +83,11 @@ function Timer({ onLogout }) {
     return () => stopTimer();
   }, [fetchSessions]);
 
+  const totalSessions = sessions.length;
+  const totalMinutes = sessions.reduce(
+    (sum, session) => sum + session.duration, 0);
+  const totalHours = (totalMinutes / 60).toFixed(1);
+
   return (
         <div className="timer-page">
           <div className="timer-card">
@@ -133,6 +138,20 @@ function Timer({ onLogout }) {
             </p>
           ))
         )}
+      </section>
+
+      <section className="dashboard-card">
+        <h3>Productivity Dashboard</h3>
+        <div className="dashboard-stats">
+          <div className="stat-box">
+            <div className="stat-number">{totalSessions}</div>
+            <div className="stat-label">Total Sessions</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-number">{totalHours}</div>
+            <div className="stat-label">Total Hours</div>
+          </div>
+        </div>
       </section>
     </div>
   );
