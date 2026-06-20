@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import useSessions from "../hooks/useSessions";
 import { apiPath } from "../api";
-import Sunflower from "../components/Sunflower";
+import Flower from "../components/Flower";
 
 function Timer({ onLogout }) {
   const { sessions, fetchSessions } = useSessions();
@@ -71,12 +71,15 @@ function Timer({ onLogout }) {
     setTimeLeft(customMinutes * 60);
   };
 
-  const growthStages = ["seed", "sprout", "bud", "half", "full"];
+  const growthStages = ["sprout", "young", "bud", "half", "flower"];
   const totalDuration = customMinutes * 60;
-  const elapsed = startTimeRef.current ? Math.floor((Date.now() - startTimeRef.current) / 1000) : 0;
-  const progress = Math.min(1, elapsed / totalDuration);
-  const stageIndex = Math.min(4, Math.floor(progress * 5)); 
+  
+  const elapsed = totalDuration - timeLeft;
+  const progress = Math.max(0, Math.min(1, elapsed / totalDuration));
+  const stageIndex = Math.min(4, Math.floor(progress * 5));
   const stage = growthStages[stageIndex];
+
+  const currentFlower = "sunflower";
 
   useEffect(() => {
     fetchSessions();
@@ -96,8 +99,7 @@ function Timer({ onLogout }) {
 
             <div className="timer-content">
               <div className="timer-left">
-                <Sunflower stage={stage} />
-                <div className="plant-label">Growing: {stage}</div>
+                <Flower breed = {currentFlower} stage = {stage} isRunning={isRunning}/>
               </div>
 
               <div className="timer-right">
