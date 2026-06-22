@@ -1,32 +1,30 @@
-
 import { useEffect, useState } from "react";
 import { flowerData } from "../data/flowerData";
 import "./Flower.css";
 
-export default function Flower({ breed = "sunflower", stage = "sprout", isRunning = false }) {
-  const [frameIndex, setFrameIndex] = useState(0);
+export default function Flower({ 
+  breed = "sunflower", 
+  stage = "sprout", 
+  isRunning = false 
+}) {
+  if (!breed || breed === "no-flower") {
+    return (
+      <div className="flower-wrapper flower-no-flower">
+        <div className="no-flower-placeholder">No flower</div>
+      </div>
+    );
+  }
 
-  const breedFrames = flowerData[breed] || flowerData.sunflower;
-  const frames = breedFrames[stage] || breedFrames.sprout;
-  const imageSrc = frames[frameIndex % frames.length];
-
-  useEffect(() => {
-    setFrameIndex(0);
-  }, [stage]);
-
-  useEffect(() => {
-    if (!isRunning) return;
-
-    const interval = setInterval(() => {
-      setFrameIndex((prev) => prev + 1);
-    }, 180);
-
-    return () => clearInterval(interval);
-  }, [isRunning]);
+  const breedImages = flowerData[breed] || flowerData.sunflower;
+  const imageSrc = breedImages[stage] || breedImages.sprout;
 
   return (
     <div className={`flower-wrapper flower-${breed} flower-${stage}`}>
-      <img src={imageSrc} alt={`${breed} ${stage}`} className="flower" />
+      <img
+        src={imageSrc}
+        alt={`${breed} ${stage}`}
+        className={`flower ${isRunning ? "flower-running" : ""}`}
+      />
     </div>
   );
 }

@@ -175,3 +175,17 @@ button:hover {
   font-size: 12px;
   opacity: 0.7;
 }
+
+.plant-log-card {
+  width: 100%;
+  max-width: 560px;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 2px dashed #bde8b8;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+}
+
+.plant-log-item {
+  margin: 8px 0;
+}

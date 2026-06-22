@@ -1,22 +1,35 @@
 import { Session } from "../models/session.model.js"
 import jwt from "jsonwebtoken"
 
-const getFlowerForSession = (sessionCount) => {
-    const rand = Math.random() * 100
+const getFlowerForSession = (sessionNumber, duration) => {
+    if (duration < 15) {
+        return null
+    }
 
-    if (sessionCount <= 10) {
-        if (rand < 60) return { species: "Sunflower", rarity: "Common" }
-        if (rand < 90) return { species: "Daisy", rarity: "Uncommon" }
-        return { species: "Tulip", rarity: "Rare" }
-    } else if (sessionCount <= 20) {
-        if (rand < 60) return { species: "Rose", rarity: "Uncommon" }
-        if (rand < 90) return { species: "Lavender", rarity: "Rare" }
-        return { species: "Lily", rarity: "Legendary" }
-    } else {
+    const rand = Math.random() * 100
+    const isType3 = sessionNumber >= 21 || duration > 100
+    const isType2 = (sessionNumber >= 11 && sessionNumber <= 20) || duration >= 30
+    const isType1 = (sessionNumber >= 1 && sessionNumber <= 10) || duration >= 15
+
+    if (isType3) {
         if (rand < 60) return { species: "Orchid", rarity: "Rare" }
         if (rand < 95) return { species: "Blue Rose", rarity: "Legendary" }
         return { species: "Sakura", rarity: "Mythical" }
     }
+
+    if (isType2) {
+        if (rand < 60) return { species: "Rose", rarity: "Uncommon" }
+        if (rand < 90) return { species: "Lavender", rarity: "Rare" }
+        return { species: "Lily", rarity: "Legendary" }
+    }
+
+    if (isType1) {
+        if (rand < 60) return { species: "Sunflower", rarity: "Common" }
+        if (rand < 90) return { species: "Daisy", rarity: "Uncommon" }
+        return { species: "Tulip", rarity: "Rare" }
+    }
+
+    return null
 }
 
 const saveSession = async (req, res) => {
@@ -27,18 +40,23 @@ const saveSession = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
         const { duration } = req.body
-
         const sessionCount = await Session.countDocuments({ user: decoded.id })
-        const flower = getFlowerForSession(sessionCount)
+        const sessionNumber = sessionCount + 1
+        const flower = getFlowerForSession(sessionNumber, duration)
+        const flowerResponse = flower || {
+            species: null,
+            rarity: null,
+            message: "No flower earned for sessions under 15 minutes"
+        }
 
         const session = await Session.create({
             user: decoded.id,
             duration,
-            flowerSpecies: flower.species,
-            flowerRarity: flower.rarity
+            flowerSpecies: flower?.species || null,
+            flowerRarity: flower?.rarity || null
         })
 
-        res.status(201).json({ message: "Session saved!", session, flower })
+        res.status(201).json({ message: "Session saved!", session, flower: flowerResponse })
 
     } catch (error) {
         res.status(500).json({ message: "Internal Server Error", error: error.message })
@@ -53,8 +71,16 @@ const getSessions = async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
         const sessions = await Session.find({ user: decoded.id }).sort({ createdAt: -1 })
+        const sanitizedSessions = sessions.map((session) => {
+            const sessionObj = session.toObject ? session.toObject() : session
+            if (sessionObj.duration < 15) {
+                sessionObj.flowerSpecies = null
+                sessionObj.flowerRarity = null
+            }
+            return sessionObj
+        })
 
-        res.status(200).json({ sessions })
+        res.status(200).json({ sessions: sanitizedSessions })
 
     } catch (error) {
         res.status(500).json({ message: "Internal Server Error", error: error.message })

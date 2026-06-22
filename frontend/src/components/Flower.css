@@ -5,7 +5,21 @@
 }
 
 .flower {
-  width: 300px;
+  width: 140px;
   height: auto;
   image-rendering: pixelated;
 }
+
+.flower-running {
+  animation: sway 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes sway {
+  from {
+    transform: rotate(-2deg) translateY(2px);
+  }
+  to {
+    transform: rotate(2deg) translateY(-2px);
+  }
+}
+

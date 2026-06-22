@@ -13,11 +13,11 @@ const sessionSchema = new Schema(
         },
         flowerSpecies: {
             type: String,
-            required: true
+            default: null
         },
         flowerRarity: {
             type: String,
-            required: true
+            default: null
         }
     },
     { timestamps: true }
