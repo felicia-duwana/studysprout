@@ -47,13 +47,13 @@ function Timer({ onLogout }) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         duration,
-      distractionSeconds: totalDistractedSecondsRef.current,
-      manualPauseCount: manualPauseCountRef.current,
-      tabSwitchCount: tabSwitchCountRef.current,
-      flowerSpecies: currentFlowerRef.current !== "no-flower" ? currentFlowerRef.current : null,
-       }),
+        distractionSeconds: totalDistractedSecondsRef.current,
+        manualPauseCount: manualPauseCountRef.current,
+        tabSwitchCount: tabSwitchCountRef.current,
+        flowerSpecies: currentFlowerRef.current !== "no-flower" ? currentFlowerRef.current : null,
+      }),
     });
 
     const data = await response.json();
@@ -139,9 +139,9 @@ function Timer({ onLogout }) {
     }
 
     if (timeLeft === minutes * 60) {
-    const selectedFlower = pickFlowerForSession();
-    setCurrentFlower(selectedFlower || "no-flower");
-    currentFlowerRef.current = selectedFlower || "no-flower";
+      const selectedFlower = pickFlowerForSession();
+      setCurrentFlower(selectedFlower || "no-flower");
+      currentFlowerRef.current = selectedFlower || "no-flower";
     }
 
     endTimeRef.current = Date.now() + timeLeft * 1000;
@@ -220,7 +220,7 @@ function Timer({ onLogout }) {
 
   const growthStages = ["sprout", "young", "bud", "half", "flower"];
   const totalDuration = customMinutes * 60;
-  
+
   const elapsed = totalDuration - timeLeft;
   const progress = Math.max(0, Math.min(1, elapsed / totalDuration));
   const stageIndex = Math.min(4, Math.floor(progress * 5));
@@ -249,19 +249,19 @@ function Timer({ onLogout }) {
   ];
 
   const plantCounts = flowerOrder
-  .map(flower => ({
-    ...flower,
-    count: sessions.filter(session => session.duration >= 15 && session.flowerSpecies === flower.species).length
-  }))
-  .filter(flower => flower.count > 0);
+    .map(flower => ({
+      ...flower,
+      count: sessions.filter(session => session.duration >= 15 && session.flowerSpecies === flower.species).length
+    }))
+    .filter(flower => flower.count > 0);
 
   const totalDistractionSeconds = sessions.reduce(
-  (sum, session) => sum + (session.distractionSeconds || 0),
-  0);
+    (sum, session) => sum + (session.distractionSeconds || 0),
+    0);
 
   return (
-        <div className="timer-page">
-          {isDistracted && (
+    <div className="timer-page">
+      {isDistracted && (
         <div className="distraction-overlay">
           <div className="distraction-modal">
             <h2>Study Session Paused</h2>
@@ -280,92 +280,133 @@ function Timer({ onLogout }) {
           </div>
         </div>
       )}
- 
-          <button className="guide-button" onClick={() => setShowGuide(!showGuide)}>
-            {showGuide ? "Hide Guide" : "Show Guide"}
-          </button>
 
-          {showGuide && (
-            <div className="guide-content">
-              <h2>How to Use the Timer</h2>
-              <p>1. Set your desired study session duration (minimum 15 minutes).</p>
-              <p>2. Click "Set Timer" to apply the duration.</p>
-              <p>3. Click "Start" to begin your session.</p>
-              <p>4. You can stop or reset the timer at any time.</p>
-              <p>5. Complete your session to unlock random flowers!</p>
+      <button className="guide-button" onClick={() => setShowGuide(!showGuide)}>
+        {showGuide ? "Hide Guide" : "Show Guide"}
+      </button>
 
-
-            <h2>Tier Chart</h2>
-            <ul>
-              <li>Common: Sunflower</li>
-              <li>Uncommon: Daisy, Rose</li>
-              <li>Rare: Tulip, Lavender, Orchid</li>
-              <li>Legendary: Lily, Blue Rose</li>
-              <li>Mythical: Sakura</li>
-            </ul>
-
-    </div>
+      {showGuide && (
+        <div className="guide-content">
+          <h2>How to Use the Timer</h2>
+          <p>1. Set your desired study session duration (minimum 15 minutes).</p>
+          <p>2. Click "Set Timer" to apply the duration.</p>
+          <p>3. Click "Start" to begin your session.</p>
+          <p>4. You can stop or reset the timer at any time.</p>
+          <p>5. Complete your session to unlock random flowers!</p>
 
 
-          )}
+          <h2>Tier Chart</h2>
+          <ul>
+            <li>Common: Sunflower</li>
+            <li>Uncommon: Daisy, Rose</li>
+            <li>Rare: Tulip, Lavender, Orchid</li>
+            <li>Legendary: Lily, Blue Rose</li>
+            <li>Mythical: Sakura</li>
+          </ul>
+
+        </div>
+
+
+      )}
 
 
 
-          <div className="timer-card">
-            <button className="top-logout" onClick={onLogout}>Logout</button>
-            <h1>Track your sessions now!</h1>
+      <div className="timer-card">
+        <button className="top-logout" onClick={onLogout}>Logout</button>
+        <h1>Track your sessions now!</h1>
 
-            <div className="timer-content">
-              <div className="timer-left">
-                <Flower breed = {currentFlower} stage = {stage} isRunning={isRunning}/>
-              </div>
-
-              <div className="timer-right">
-                <div>
-                  <input
-                    type="number"
-                    min="15"
-                    max="60"
-                    value={customMinutes}
-                    onChange={(e) => setCustomMinutes(Math.max(15, Number(e.target.value)))}
-                  />
-                  <button onClick={() => {
-                    stopTimer()
-                    const minutes = Math.max(15, customMinutes)
-                    setCustomMinutes(minutes)
-                    setTimeLeft(minutes * 60)
-                  }}>Set Timer</button>
-                </div>
-                <div className="timer-circle">
-                  <span className="timer-display">{formatTime(timeLeft)}</span>
-                </div>
-
-                <div className="timer-controls">
-                  <button className="timer-button" onClick={startTimer}> {isDistracted ? "Resume" : "Start"}</button>
-                  <button className="timer-button" onClick={stopTimer}>Stop</button>
-                  <button className="timer-button" onClick={resetTimer}>Reset</button>
-                </div>
-
-                {lastFlowerMessage && (
-                  <div className="flower-feedback">
-                    <p>{lastFlowerMessage}</p>
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="timer-content">
+          <div className="timer-left">
+            <Flower breed={currentFlower} stage={stage} isRunning={isRunning} />
           </div>
+
+          <div className="timer-right">
+            <div>
+              <input
+                type="number"
+                min="15"
+                max="60"
+                value={customMinutes}
+                onChange={(e) => setCustomMinutes(Math.max(15, Number(e.target.value)))}
+              />
+              <button onClick={() => {
+                stopTimer()
+                const minutes = Math.max(15, customMinutes)
+                setCustomMinutes(minutes)
+                setTimeLeft(minutes * 60)
+              }}>Set Timer</button>
+            </div>
+            <div className="timer-circle">
+              <span className="timer-display">{formatTime(timeLeft)}</span>
+            </div>
+
+            <div className="timer-controls">
+              <button className="timer-button" onClick={startTimer}> {isDistracted ? "Resume" : "Start"}</button>
+              <button className="timer-button" onClick={stopTimer}>Stop</button>
+              <button className="timer-button" onClick={resetTimer}>Reset</button>
+            </div>
+
+            {lastFlowerMessage && (
+              <div className="flower-feedback">
+                <p>{lastFlowerMessage}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <section className="garden-card">
+        <h3>Your Garden 🌷</h3>
+
+        {plantCounts.length === 0 ? (
+          <p>No flowers in your garden yet!</p>
+        ) : (
+          <div className="garden-grid">
+            {plantCounts.map((plant) => (
+              <div key={plant.species} className="garden-flower">
+                <Flower
+                  breed={plant.species.toLowerCase().replace(/\s+/g, "")}
+                  stage="flower"
+                  isRunning={false}
+                />
+                <p className="flower-name">{plant.species}</p>
+                <p className="flower-rarity">{plant.rarity}</p>
+                <p className="flower-count">x{plant.count}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="sessions-card">
         <h3>Past Sessions</h3>
         {sessions.length === 0 ? (
           <p>No sessions yet!</p>
         ) : (
-          sessions.map((session) => (
-            <p key={session._id} className="session-item">
-              {new Date(session.createdAt).toLocaleDateString()} - {session.duration} minutes - Distraction Time: {formatTime(session.distractionSeconds || 0)} 
-               {session.duration >= 15 && session.flowerSpecies ? `- ${session.flowerSpecies} (${session.flowerRarity})` : "- No flower"}
-            </p>
-          ))
+          <div className="sessions-list">
+            <div className="session-row session-header">
+              <div className="session-date">Date</div>
+              <div className="session-duration">Duration</div>
+              <div className="session-distraction">Distracted</div>
+              <div className="session-flower">Flower Earned</div>
+            </div>
+            {sessions.map((session) => (
+              <div key={session._id} className="session-row">
+                <div className="session-date">
+                  {new Date(session.createdAt).toLocaleDateString()}
+                </div>
+                <div className="session-duration">{session.duration} min</div>
+                <div className="session-distraction">
+                  ⏱ {formatTime(session.distractionSeconds || 0)}
+                </div>
+                <div className="session-flower">
+                  {session.flowerSpecies
+                    ? `🌸 ${session.flowerSpecies} (${session.flowerRarity})`
+                    : "No flower"}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </section>
 
@@ -383,23 +424,12 @@ function Timer({ onLogout }) {
           <div className="stat-box">
             <div className="stat-number">{formatTime(totalDistractionSeconds)}</div>
             <div className="stat-label">Total Distraction Time</div>
-            </div>
+          </div>
         </div>
       </section>
 
-      <section className="plant-log-card">
-        <h3>Plant Log</h3>
-
-        {plantCounts.length === 0 ? (
-          <p>No plants unlocked yet!</p>
-        ) : (
-        plantCounts.map((plant) => (
-          <p key={plant.species} className="plant-log-item">
-            {plant.species} ({plant.rarity}) -- {plant.count}
-            </p>
-          )))}
-          </section>
     </div>
+
   );
 }
 
