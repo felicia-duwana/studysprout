@@ -10,15 +10,31 @@ function Timer({ onLogout }) {
   const [customMinutes, setCustomMinutes] = useState(25);
   const [lastFlowerMessage, setLastFlowerMessage] = useState("");
   const [currentFlower, setCurrentFlower] = useState("sunflower");
+  const [showGuide, setShowGuide] = useState(false);
+  const [isDistracted, setIsDistracted] = useState(false);
+  const [distractionReason, setDistractionReason] = useState("");
+  const [distractionSeconds, setDistractionSeconds] = useState(0);
   const intervalRef = useRef(null);
   const startTimeRef = useRef(null);
   const endTimeRef = useRef(null);
   const currentFlowerRef = useRef("sunflower");
+  const distractionStartRef = useRef(null);
+  const totalDistractedSecondsRef = useRef(0);
+  const manualPauseCountRef = useRef(0);
+  const tabSwitchCountRef = useRef(0);
+
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainder = seconds % 60;
     return `${minutes.toString().padStart(2, "0")}:${remainder.toString().padStart(2, "0")}`;
+  };
+
+  const clearTimerOnly = () => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    endTimeRef.current = null;
+    setIsRunning(false);
   };
 
   const saveSession = async (duration) => {
@@ -31,7 +47,13 @@ function Timer({ onLogout }) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ duration }),
+      body: JSON.stringify({ 
+        duration,
+      distractionSeconds: totalDistractedSecondsRef.current,
+      manualPauseCount: manualPauseCountRef.current,
+      tabSwitchCount: tabSwitchCountRef.current,
+      flowerSpecies: currentFlowerRef.current !== "no-flower" ? currentFlowerRef.current : null,
+       }),
     });
 
     const data = await response.json();
@@ -72,8 +94,43 @@ function Timer({ onLogout }) {
     return "sunflower"
   };
 
+  const beginDistraction = (reason) => {
+    if (!isRunning) return;
+
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    endTimeRef.current = null;
+    setIsRunning(false);
+
+    if (!distractionStartRef.current) {
+      distractionStartRef.current = Date.now();
+      setIsDistracted(true);
+      setDistractionReason(reason);
+
+      if (reason === "manual") {
+        manualPauseCountRef.current += 1;
+      }
+
+      if (reason === "tab") {
+        tabSwitchCountRef.current += 1;
+      }
+    }
+  };
   const startTimer = () => {
     if (intervalRef.current || isRunning) return;
+
+    if (isDistracted && distractionStartRef.current) {
+      const distractedFor = Math.floor(
+        (Date.now() - distractionStartRef.current) / 1000
+      );
+
+      totalDistractedSecondsRef.current += distractedFor;
+      setDistractionSeconds(totalDistractedSecondsRef.current);
+
+      distractionStartRef.current = null;
+      setIsDistracted(false);
+      setDistractionReason("");
+    }
 
     const minutes = Math.max(15, customMinutes)
     if (minutes !== customMinutes) {
@@ -81,11 +138,12 @@ function Timer({ onLogout }) {
       setTimeLeft(minutes * 60)
     }
 
+    if (timeLeft === minutes * 60) {
     const selectedFlower = pickFlowerForSession();
     setCurrentFlower(selectedFlower || "no-flower");
     currentFlowerRef.current = selectedFlower || "no-flower";
+    }
 
-    startTimeRef.current = Date.now();
     endTimeRef.current = Date.now() + timeLeft * 1000;
     setIsRunning(true);
 
@@ -94,28 +152,71 @@ function Timer({ onLogout }) {
       setTimeLeft(remaining);
 
       if (remaining <= 0) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-        endTimeRef.current = null;
-        setIsRunning(false);
+        clearTimerOnly();
         alert("Time is up! Session is over");
         saveSession(customMinutes);
         setTimeLeft(customMinutes * 60);
+
+        setIsDistracted(false);
+        setDistractionReason("");
+        setDistractionSeconds(0);
+        distractionStartRef.current = null;
+        totalDistractedSecondsRef.current = 0;
+        manualPauseCountRef.current = 0;
+        tabSwitchCountRef.current = 0;
       }
     }, 1000);
   };
 
   const stopTimer = () => {
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-    endTimeRef.current = null;
-    setIsRunning(false);
+    beginDistraction("manual");
   };
 
+
   const resetTimer = () => {
-    stopTimer();
+    clearTimerOnly();
     setTimeLeft(customMinutes * 60);
+
+    setIsDistracted(false);
+    setDistractionReason("");
+    setDistractionSeconds(0);
+    distractionStartRef.current = null;
+    totalDistractedSecondsRef.current = 0;
+    manualPauseCountRef.current = 0;
+    tabSwitchCountRef.current = 0;
   };
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isRunning) {
+        beginDistraction("tab");
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isRunning]);
+
+  useEffect(() => {
+    if (!isDistracted) return;
+
+    const interval = setInterval(() => {
+      if (!distractionStartRef.current) return;
+
+      const currentDistraction = Math.floor(
+        (Date.now() - distractionStartRef.current) / 1000
+      );
+
+      setDistractionSeconds(
+        totalDistractedSecondsRef.current + currentDistraction
+      );
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isDistracted]);
 
   const growthStages = ["sprout", "young", "bud", "half", "flower"];
   const totalDuration = customMinutes * 60;
@@ -156,6 +257,56 @@ function Timer({ onLogout }) {
 
   return (
         <div className="timer-page">
+          {isDistracted && (
+        <div className="distraction-overlay">
+          <div className="distraction-modal">
+            <h2>Study Session Paused</h2>
+
+            <p>
+              {distractionReason === "tab"
+                ? "You left the study page."
+                : "Session paused."}
+            </p>
+
+            <p>Distraction Time: {formatTime(distractionSeconds)}</p>
+
+            <button className="timer-button" onClick={startTimer}>
+              Resume
+            </button>
+          </div>
+        </div>
+      )}
+ 
+          <button className="guide-button" onClick={() => setShowGuide(!showGuide)}>
+            {showGuide ? "Hide Guide" : "Show Guide"}
+          </button>
+
+          {showGuide && (
+            <div className="guide-content">
+              <h2>How to Use the Timer</h2>
+              <p>1. Set your desired study session duration (minimum 15 minutes).</p>
+              <p>2. Click "Set Timer" to apply the duration.</p>
+              <p>3. Click "Start" to begin your session.</p>
+              <p>4. You can stop or reset the timer at any time.</p>
+              <p>5. Complete your session to unlock random flowers!</p>
+
+
+            <h2>Tier Chart</h2>
+            <ul>
+              <li>Common: Sunflower</li>
+              <li>Uncommon: Daisy, Rose</li>
+              <li>Rare: Tulip, Lavender, Orchid</li>
+              <li>Legendary: Lily, Blue Rose</li>
+              <li>Mythical: Sakura</li>
+            </ul>
+
+    </div>
+
+
+          )}
+
+
+
           <div className="timer-card">
             <button className="top-logout" onClick={onLogout}>Logout</button>
             <h1>Track your sessions now!</h1>
@@ -186,7 +337,7 @@ function Timer({ onLogout }) {
                 </div>
 
                 <div className="timer-controls">
-                  <button className="timer-button" onClick={startTimer}>Start</button>
+                  <button className="timer-button" onClick={startTimer}> {isDistracted ? "Resume" : "Start"}</button>
                   <button className="timer-button" onClick={stopTimer}>Stop</button>
                   <button className="timer-button" onClick={resetTimer}>Reset</button>
                 </div>
