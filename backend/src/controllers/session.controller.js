@@ -39,7 +39,13 @@ const saveSession = async (req, res) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-        const { duration } = req.body
+        const { 
+            duration,
+            distractionSeconds,
+            manualPauseCount,
+            tabSwitchCount 
+        } = req.body
+        
         const sessionCount = await Session.countDocuments({ user: decoded.id })
         const sessionNumber = sessionCount + 1
         const flower = getFlowerForSession(sessionNumber, duration)
@@ -52,6 +58,9 @@ const saveSession = async (req, res) => {
         const session = await Session.create({
             user: decoded.id,
             duration,
+            distractionSeconds: distractionSeconds || 0,
+            manualPauseCount: manualPauseCount || 0,
+            tabSwitchCount: tabSwitchCount || 0,
             flowerSpecies: flower?.species || null,
             flowerRarity: flower?.rarity || null
         })

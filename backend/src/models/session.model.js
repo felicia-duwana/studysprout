@@ -18,6 +18,18 @@ const sessionSchema = new Schema(
         flowerRarity: {
             type: String,
             default: null
+        },
+        distractionSeconds: {
+            type: Number,
+            default: 0
+        },
+        manualPauseCount: {
+            type: Number,
+            default: 0
+        },
+        tabSwitchCount: {
+            type: Number,
+            default: 0
         }
     },
     { timestamps: true }

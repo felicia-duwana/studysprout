@@ -255,6 +255,10 @@ function Timer({ onLogout }) {
   }))
   .filter(flower => flower.count > 0);
 
+  const totalDistractionSeconds = sessions.reduce(
+  (sum, session) => sum + (session.distractionSeconds || 0),
+  0);
+
   return (
         <div className="timer-page">
           {isDistracted && (
@@ -358,7 +362,8 @@ function Timer({ onLogout }) {
         ) : (
           sessions.map((session) => (
             <p key={session._id} className="session-item">
-              {new Date(session.createdAt).toLocaleDateString()} - {session.duration} minutes {session.duration >= 15 && session.flowerSpecies ? `- ${session.flowerSpecies} (${session.flowerRarity})` : "- No flower"}
+              {new Date(session.createdAt).toLocaleDateString()} - {session.duration} minutes - Distraction Time: {formatTime(session.distractionSeconds || 0)} 
+               {session.duration >= 15 && session.flowerSpecies ? `- ${session.flowerSpecies} (${session.flowerRarity})` : "- No flower"}
             </p>
           ))
         )}
@@ -375,6 +380,10 @@ function Timer({ onLogout }) {
             <div className="stat-number">{totalHours}</div>
             <div className="stat-label">Total Hours</div>
           </div>
+          <div className="stat-box">
+            <div className="stat-number">{formatTime(totalDistractionSeconds)}</div>
+            <div className="stat-label">Total Distraction Time</div>
+            </div>
         </div>
       </section>
 
