@@ -32,6 +32,32 @@ const getFlowerForSession = (sessionNumber, duration) => {
     return null
 }
 
+const getFlowerRarityBySpecies = (species) => {
+    switch (species?.toLowerCase()) {
+        case "sunflower":
+            return "Common"
+        case "daisy":
+            return "Uncommon"
+        case "rose":
+            return "Uncommon"
+        case "tulip":
+            return "Rare"
+        case "lavender":
+            return "Rare"
+        case "orchid":
+            return "Rare"
+        case "lily":
+            return "Legendary"
+        case "blue rose":
+        case "bluerose":
+            return "Legendary"
+        case "sakura":
+            return "Mythical"
+        default:
+            return null
+    }
+}
+
 const saveSession = async (req, res) => {
     try {
         const token = req.headers.authorization?.split(" ")[1]
@@ -39,16 +65,28 @@ const saveSession = async (req, res) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-        const { 
+        const {
             duration,
             distractionSeconds,
             manualPauseCount,
-            tabSwitchCount 
+            tabSwitchCount,
+            flowerSpecies,
+            flowerRarity
         } = req.body
         
         const sessionCount = await Session.countDocuments({ user: decoded.id })
         const sessionNumber = sessionCount + 1
-        const flower = getFlowerForSession(sessionNumber, duration)
+        let flower = null
+
+        if (duration >= 15 && flowerSpecies) {
+            flower = {
+                species: flowerSpecies,
+                rarity: flowerRarity || getFlowerRarityBySpecies(flowerSpecies)
+            }
+        } else {
+            flower = getFlowerForSession(sessionNumber, duration)
+        }
+
         const flowerResponse = flower || {
             species: null,
             rarity: null,

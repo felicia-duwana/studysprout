@@ -10,6 +10,8 @@ function Timer({ onLogout }) {
   const [customMinutes, setCustomMinutes] = useState(25);
   const [lastFlowerMessage, setLastFlowerMessage] = useState("");
   const [currentFlower, setCurrentFlower] = useState("sunflower");
+  const [currentFlowerSpecies, setCurrentFlowerSpecies] = useState("Sunflower");
+  const [currentFlowerRarity, setCurrentFlowerRarity] = useState("Common");
   const [showGuide, setShowGuide] = useState(false);
   const [isDistracted, setIsDistracted] = useState(false);
   const [distractionReason, setDistractionReason] = useState("");
@@ -17,7 +19,11 @@ function Timer({ onLogout }) {
   const intervalRef = useRef(null);
   const startTimeRef = useRef(null);
   const endTimeRef = useRef(null);
-  const currentFlowerRef = useRef("sunflower");
+  const currentFlowerRef = useRef({
+    species: "Sunflower",
+    rarity: "Common",
+    breed: "sunflower",
+  });
   const distractionStartRef = useRef(null);
   const totalDistractedSecondsRef = useRef(0);
   const manualPauseCountRef = useRef(0);
@@ -52,7 +58,8 @@ function Timer({ onLogout }) {
         distractionSeconds: totalDistractedSecondsRef.current,
         manualPauseCount: manualPauseCountRef.current,
         tabSwitchCount: tabSwitchCountRef.current,
-        flowerSpecies: currentFlowerRef.current !== "no-flower" ? currentFlowerRef.current : null,
+        flowerSpecies: currentFlowerRef.current.species || null,
+        flowerRarity: currentFlowerRef.current.rarity || null,
       }),
     });
 
@@ -64,18 +71,28 @@ function Timer({ onLogout }) {
     }
 
     if (data.flower?.species) {
-      const normalized = data.flower.species.toLowerCase().replace(/\s+/g, "")
+      const normalized = data.flower.species.toLowerCase().replace(/\s+/g, "");
       setLastFlowerMessage(`Unlocked ${data.flower.species} (${data.flower.rarity})!`);
-      setCurrentFlower(normalized)
-      currentFlowerRef.current = normalized
+      setCurrentFlower(normalized);
+      setCurrentFlowerSpecies(data.flower.species);
+      setCurrentFlowerRarity(data.flower.rarity);
+      currentFlowerRef.current = {
+        species: data.flower.species,
+        rarity: data.flower.rarity,
+        breed: normalized,
+      };
     } else {
       setLastFlowerMessage(data.flower?.message || "No flower earned: study at least 15 minutes to unlock one.");
-      setCurrentFlower("no-flower")
-      currentFlowerRef.current = "no-flower"
+      setCurrentFlower("no-flower");
+      setCurrentFlowerSpecies(null);
+      setCurrentFlowerRarity(null);
+      currentFlowerRef.current = { species: null, rarity: null, breed: "no-flower" };
     }
 
     fetchSessions();
   };
+
+  const normalizeBreed = (species) => species.toLowerCase().replace(/\s+/g, "");
 
   const pickFlowerForSession = () => {
     const sessionNumber = sessions.length + 1;
@@ -83,15 +100,30 @@ function Timer({ onLogout }) {
 
     if (duration < 15) return null;
 
-    const isType3 = sessionNumber >= 21 || duration > 100
-    const isType2 = (sessionNumber >= 11 && sessionNumber <= 20) || duration >= 30
-    const isType1 = (sessionNumber >= 1 && sessionNumber <= 10) || duration >= 15
+    const rand = Math.random() * 100;
+    const isType3 = sessionNumber >= 21 || duration > 100;
+    const isType2 = (sessionNumber >= 11 && sessionNumber <= 20) || duration >= 30;
+    const isType1 = (sessionNumber >= 1 && sessionNumber <= 10) || duration >= 15;
 
-    if (isType3) return "orchid"
-    if (isType2) return "rose"
-    if (isType1) return "sunflower"
+    if (isType3) {
+      if (rand < 60) return { species: "Orchid", rarity: "Rare", breed: "orchid" };
+      if (rand < 95) return { species: "Blue Rose", rarity: "Legendary", breed: "bluerose" };
+      return { species: "Sakura", rarity: "Mythical", breed: "sakura" };
+    }
 
-    return "sunflower"
+    if (isType2) {
+      if (rand < 60) return { species: "Rose", rarity: "Uncommon", breed: "rose" };
+      if (rand < 90) return { species: "Lavender", rarity: "Rare", breed: "lavender" };
+      return { species: "Lily", rarity: "Legendary", breed: "lily" };
+    }
+
+    if (isType1) {
+      if (rand < 60) return { species: "Sunflower", rarity: "Common", breed: "sunflower" };
+      if (rand < 90) return { species: "Daisy", rarity: "Uncommon", breed: "daisy" };
+      return { species: "Tulip", rarity: "Rare", breed: "tulip" };
+    }
+
+    return { species: "Sunflower", rarity: "Common", breed: "sunflower" };
   };
 
   const beginDistraction = (reason) => {
@@ -140,8 +172,17 @@ function Timer({ onLogout }) {
 
     if (timeLeft === minutes * 60) {
       const selectedFlower = pickFlowerForSession();
-      setCurrentFlower(selectedFlower || "no-flower");
-      currentFlowerRef.current = selectedFlower || "no-flower";
+      if (selectedFlower) {
+        setCurrentFlower(selectedFlower.breed);
+        setCurrentFlowerSpecies(selectedFlower.species);
+        setCurrentFlowerRarity(selectedFlower.rarity);
+        currentFlowerRef.current = selectedFlower;
+      } else {
+        setCurrentFlower("no-flower");
+        setCurrentFlowerSpecies(null);
+        setCurrentFlowerRarity(null);
+        currentFlowerRef.current = { species: null, rarity: null, breed: "no-flower" };
+      }
     }
 
     endTimeRef.current = Date.now() + timeLeft * 1000;
@@ -184,6 +225,10 @@ function Timer({ onLogout }) {
     totalDistractedSecondsRef.current = 0;
     manualPauseCountRef.current = 0;
     tabSwitchCountRef.current = 0;
+    setCurrentFlower("no-flower");
+    setCurrentFlowerSpecies(null);
+    setCurrentFlowerRarity(null);
+    currentFlowerRef.current = { species: null, rarity: null, breed: "no-flower" };
   };
 
   useEffect(() => {
@@ -325,7 +370,7 @@ function Timer({ onLogout }) {
               <input
                 type="number"
                 min="15"
-                max="60"
+                max="120"
                 value={customMinutes}
                 onChange={(e) => setCustomMinutes(Math.max(15, Number(e.target.value)))}
               />
