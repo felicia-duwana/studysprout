@@ -145,7 +145,8 @@ function Timer({ onLogout }) {
   const startTimer = async () => {
     if (intervalRef.current || isRunning) return;
 
-    if (isDistracted && distractionStartRef.current) {
+    const isResume = isDistracted && distractionStartRef.current;
+    if (isResume) {
       const distractedFor = Math.floor(
         (Date.now() - distractionStartRef.current) / 1000
       );
@@ -164,17 +165,19 @@ function Timer({ onLogout }) {
       setTimeLeft(minutes * 60)
     }
 
-    const selectedFlower = await pickFlowerForSession();
-    if (selectedFlower) {
-      setCurrentFlower(selectedFlower.breed);
-      setCurrentFlowerSpecies(selectedFlower.species);
-      setCurrentFlowerRarity(selectedFlower.rarity);
-      currentFlowerRef.current = selectedFlower;
-    } else {
-      setCurrentFlower("no-flower");
-      setCurrentFlowerSpecies(null);
-      setCurrentFlowerRarity(null);
-      currentFlowerRef.current = { species: null, rarity: null, breed: "no-flower" };
+    if (!isResume) {
+      const selectedFlower = await pickFlowerForSession();
+      if (selectedFlower) {
+        setCurrentFlower(selectedFlower.breed);
+        setCurrentFlowerSpecies(selectedFlower.species);
+        setCurrentFlowerRarity(selectedFlower.rarity);
+        currentFlowerRef.current = selectedFlower;
+      } else {
+        setCurrentFlower("no-flower");
+        setCurrentFlowerSpecies(null);
+        setCurrentFlowerRarity(null);
+        currentFlowerRef.current = { species: null, rarity: null, breed: "no-flower" };
+      }
     }
 
     endTimeRef.current = Date.now() + timeLeft * 1000;
