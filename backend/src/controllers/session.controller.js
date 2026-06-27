@@ -1,60 +1,21 @@
 import { Session } from "../models/session.model.js"
 import jwt from "jsonwebtoken"
+import { getFlowerForSession, resolveSessionFlower } from "../utils/flower.js"
 
-const getFlowerForSession = (sessionNumber, duration) => {
-    if (duration < 15) {
-        return null
-    }
+const getSelectedFlower = async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1]
+        if (!token) return res.status(401).json({ message: "No token provided" })
 
-    const rand = Math.random() * 100
-    const isType3 = sessionNumber >= 21 || duration > 100
-    const isType2 = (sessionNumber >= 11 && sessionNumber <= 20) || duration >= 30
-    const isType1 = (sessionNumber >= 1 && sessionNumber <= 10) || duration >= 15
+        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const duration = Number(req.query.duration || 0)
+        const sessionCount = await Session.countDocuments({ user: decoded.id })
+        const sessionNumber = sessionCount + 1
+        const flower = getFlowerForSession(sessionNumber, duration)
 
-    if (isType3) {
-        if (rand < 60) return { species: "Orchid", rarity: "Rare" }
-        if (rand < 95) return { species: "Blue Rose", rarity: "Legendary" }
-        return { species: "Sakura", rarity: "Mythical" }
-    }
-
-    if (isType2) {
-        if (rand < 60) return { species: "Rose", rarity: "Uncommon" }
-        if (rand < 90) return { species: "Lavender", rarity: "Rare" }
-        return { species: "Lily", rarity: "Legendary" }
-    }
-
-    if (isType1) {
-        if (rand < 60) return { species: "Sunflower", rarity: "Common" }
-        if (rand < 90) return { species: "Daisy", rarity: "Uncommon" }
-        return { species: "Tulip", rarity: "Rare" }
-    }
-
-    return null
-}
-
-const getFlowerRarityBySpecies = (species) => {
-    switch (species?.toLowerCase()) {
-        case "sunflower":
-            return "Common"
-        case "daisy":
-            return "Uncommon"
-        case "rose":
-            return "Uncommon"
-        case "tulip":
-            return "Rare"
-        case "lavender":
-            return "Rare"
-        case "orchid":
-            return "Rare"
-        case "lily":
-            return "Legendary"
-        case "blue rose":
-        case "bluerose":
-            return "Legendary"
-        case "sakura":
-            return "Mythical"
-        default:
-            return null
+        res.status(200).json({ flower: flower || null, sessionNumber })
+    } catch (error) {
+        res.status(500).json({ message: "Internal Server Error", error: error.message })
     }
 }
 
@@ -76,16 +37,12 @@ const saveSession = async (req, res) => {
         
         const sessionCount = await Session.countDocuments({ user: decoded.id })
         const sessionNumber = sessionCount + 1
-        let flower = null
-
-        if (duration >= 15 && flowerSpecies) {
-            flower = {
-                species: flowerSpecies,
-                rarity: flowerRarity || getFlowerRarityBySpecies(flowerSpecies)
-            }
-        } else {
-            flower = getFlowerForSession(sessionNumber, duration)
-        }
+        const flower = resolveSessionFlower({
+            duration,
+            flowerSpecies,
+            flowerRarity,
+            sessionNumber
+        })
 
         const flowerResponse = flower || {
             species: null,
@@ -134,4 +91,4 @@ const getSessions = async (req, res) => {
     }
 }
 
-export { saveSession, getSessions, getFlowerForSession }
+export { saveSession, getSessions, getSelectedFlower, getFlowerForSession }

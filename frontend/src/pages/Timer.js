@@ -13,6 +13,8 @@ function Timer({ onLogout }) {
   const [currentFlowerSpecies, setCurrentFlowerSpecies] = useState("Sunflower");
   const [currentFlowerRarity, setCurrentFlowerRarity] = useState("Common");
   const [showGuide, setShowGuide] = useState(false);
+  const [showFlowerDebug, setShowFlowerDebug] = useState(true);
+  const [showSkipTimerTest, setShowSkipTimerTest] = useState(true);
   const [isDistracted, setIsDistracted] = useState(false);
   const [distractionReason, setDistractionReason] = useState("");
   const [distractionSeconds, setDistractionSeconds] = useState(0);
@@ -92,38 +94,30 @@ function Timer({ onLogout }) {
     fetchSessions();
   };
 
-  const normalizeBreed = (species) => species.toLowerCase().replace(/\s+/g, "");
+  const pickFlowerForSession = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
 
-  const pickFlowerForSession = () => {
-    const sessionNumber = sessions.length + 1;
-    const duration = customMinutes;
-
+    const duration = Math.max(15, customMinutes);
     if (duration < 15) return null;
 
-    const rand = Math.random() * 100;
-    const isType3 = sessionNumber >= 21 || duration > 100;
-    const isType2 = (sessionNumber >= 11 && sessionNumber <= 20) || duration >= 30;
-    const isType1 = (sessionNumber >= 1 && sessionNumber <= 10) || duration >= 15;
+    try {
+      const response = await fetch(apiPath(`/api/v1/sessions/flower?duration=${duration}`), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (isType3) {
-      if (rand < 60) return { species: "Orchid", rarity: "Rare", breed: "orchid" };
-      if (rand < 95) return { species: "Blue Rose", rarity: "Legendary", breed: "bluerose" };
-      return { species: "Sakura", rarity: "Mythical", breed: "sakura" };
+      const data = await response.json();
+      if (!response.ok || !data.flower) return null;
+
+      const normalizedBreed = data.flower.species.toLowerCase().replace(/\s+/g, "");
+      return {
+        species: data.flower.species,
+        rarity: data.flower.rarity,
+        breed: normalizedBreed,
+      };
+    } catch {
+      return null;
     }
-
-    if (isType2) {
-      if (rand < 60) return { species: "Rose", rarity: "Uncommon", breed: "rose" };
-      if (rand < 90) return { species: "Lavender", rarity: "Rare", breed: "lavender" };
-      return { species: "Lily", rarity: "Legendary", breed: "lily" };
-    }
-
-    if (isType1) {
-      if (rand < 60) return { species: "Sunflower", rarity: "Common", breed: "sunflower" };
-      if (rand < 90) return { species: "Daisy", rarity: "Uncommon", breed: "daisy" };
-      return { species: "Tulip", rarity: "Rare", breed: "tulip" };
-    }
-
-    return { species: "Sunflower", rarity: "Common", breed: "sunflower" };
   };
 
   const beginDistraction = (reason) => {
@@ -148,7 +142,7 @@ function Timer({ onLogout }) {
       }
     }
   };
-  const startTimer = () => {
+  const startTimer = async () => {
     if (intervalRef.current || isRunning) return;
 
     if (isDistracted && distractionStartRef.current) {
@@ -170,19 +164,17 @@ function Timer({ onLogout }) {
       setTimeLeft(minutes * 60)
     }
 
-    if (timeLeft === minutes * 60) {
-      const selectedFlower = pickFlowerForSession();
-      if (selectedFlower) {
-        setCurrentFlower(selectedFlower.breed);
-        setCurrentFlowerSpecies(selectedFlower.species);
-        setCurrentFlowerRarity(selectedFlower.rarity);
-        currentFlowerRef.current = selectedFlower;
-      } else {
-        setCurrentFlower("no-flower");
-        setCurrentFlowerSpecies(null);
-        setCurrentFlowerRarity(null);
-        currentFlowerRef.current = { species: null, rarity: null, breed: "no-flower" };
-      }
+    const selectedFlower = await pickFlowerForSession();
+    if (selectedFlower) {
+      setCurrentFlower(selectedFlower.breed);
+      setCurrentFlowerSpecies(selectedFlower.species);
+      setCurrentFlowerRarity(selectedFlower.rarity);
+      currentFlowerRef.current = selectedFlower;
+    } else {
+      setCurrentFlower("no-flower");
+      setCurrentFlowerSpecies(null);
+      setCurrentFlowerRarity(null);
+      currentFlowerRef.current = { species: null, rarity: null, breed: "no-flower" };
     }
 
     endTimeRef.current = Date.now() + timeLeft * 1000;
@@ -213,6 +205,22 @@ function Timer({ onLogout }) {
     beginDistraction("manual");
   };
 
+  /*const skipTimerForTesting = () => {
+    if (!isRunning) return;
+
+    clearTimerOnly();
+    alert("Test skip: session ended early");
+    saveSession(customMinutes);
+    setTimeLeft(customMinutes * 60);
+
+    setIsDistracted(false);
+    setDistractionReason("");
+    setDistractionSeconds(0);
+    distractionStartRef.current = null;
+    totalDistractedSecondsRef.current = 0;
+    manualPauseCountRef.current = 0;
+    tabSwitchCountRef.current = 0;
+  }; */
 
   const resetTimer = () => {
     clearTimerOnly();
@@ -390,6 +398,18 @@ function Timer({ onLogout }) {
               <button className="timer-button" onClick={stopTimer}>Stop</button>
               <button className="timer-button" onClick={resetTimer}>Reset</button>
             </div>
+
+            {/*showSkipTimerTest && (
+              <div style={{ marginTop: "8px" }}>
+                <button type="button" onClick={skipTimerForTesting} style={{ border: "1px dashed #8b5e3c", borderRadius: "6px", backgroundColor: "#fffaf2", padding: "6px 10px", cursor: "pointer" }}>
+                  Test Skip Timer
+                </button>
+                <button type="button" onClick={() => setShowSkipTimerTest(false)} style={{ marginLeft: "6px", border: "none", background: "transparent", color: "#8b5e3c", cursor: "pointer" }}>
+                  Remove
+                </button>
+              </div>
+            )*/}
+
 
             {lastFlowerMessage && (
               <div className="flower-feedback">
