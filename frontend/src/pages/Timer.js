@@ -21,6 +21,7 @@ function Timer({ onLogout }) {
   const intervalRef = useRef(null);
   const startTimeRef = useRef(null);
   const endTimeRef = useRef(null);
+  const timeLeftRef = useRef(1500);
   const currentFlowerRef = useRef({
     species: "Sunflower",
     rarity: "Common",
@@ -159,10 +160,12 @@ function Timer({ onLogout }) {
       setDistractionReason("");
     }
 
-    const minutes = Math.max(15, customMinutes)
+    const minutes = Math.max(15, customMinutes);
+    const durationSeconds = minutes * 60;
+
     if (minutes !== customMinutes) {
-      setCustomMinutes(minutes)
-      setTimeLeft(minutes * 60)
+      setCustomMinutes(minutes);
+      setTimeLeft(durationSeconds);
     }
 
     if (!isResume) {
@@ -180,14 +183,18 @@ function Timer({ onLogout }) {
       }
     }
 
-    endTimeRef.current = Date.now() + timeLeft * 1000;
+    const startSeconds = isResume ? timeLeft : durationSeconds;
+    endTimeRef.current = Date.now() + startSeconds * 1000;
+    timeLeftRef.current = startSeconds;
     setIsRunning(true);
 
     intervalRef.current = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
-      setTimeLeft(remaining);
+      const rawRemaining = Math.max(0, Math.ceil((endTimeRef.current - Date.now()) / 1000));
+      const nextRemaining = Math.max(0, Math.min(timeLeftRef.current - 1, rawRemaining));
+      timeLeftRef.current = nextRemaining;
+      setTimeLeft(nextRemaining);
 
-      if (remaining <= 0) {
+      if (nextRemaining <= 0) {
         clearTimerOnly();
         alert("Time is up! Session is over");
         saveSession(customMinutes);
@@ -227,7 +234,9 @@ function Timer({ onLogout }) {
 
   const resetTimer = () => {
     clearTimerOnly();
-    setTimeLeft(customMinutes * 60);
+    const resetSeconds = customMinutes * 60;
+    setTimeLeft(resetSeconds);
+    timeLeftRef.current = resetSeconds;
 
     setIsDistracted(false);
     setDistractionReason("");
