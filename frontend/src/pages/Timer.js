@@ -324,6 +324,60 @@ function Timer({ onLogout }) {
     (sum, session) => sum + (session.distractionSeconds || 0),
     0);
 
+
+const uniqueStudyDays = [
+  ...new Set(
+    sessions.map(session =>
+      new Date(session.createdAt).toDateString()
+    )
+  ),
+].sort((a, b) => new Date(b) - new Date(a));
+
+let dailyStreak = 0;
+const today = new Date();
+
+for (let i = 0; i < uniqueStudyDays.length; i++) {
+  const expected = new Date(today);
+  expected.setDate(today.getDate() - i);
+
+  if (new Date(uniqueStudyDays[i]).toDateString() === expected.toDateString()) {
+    dailyStreak++;
+  } else {
+    break;
+  }
+}
+
+const getWeekKey = (date) => {
+  const d = new Date(date);
+  const year = d.getFullYear();
+
+  const firstDay = new Date(year, 0, 1);
+  const week =
+    Math.ceil((((d - firstDay) / 86400000) + firstDay.getDay() + 1) / 7);
+
+  return `${year}-${week}`;
+};
+
+const uniqueWeeks = [
+  ...new Set(
+    sessions.map(session => getWeekKey(session.createdAt))
+  ),
+];
+
+let weeklyStreak = 0;
+let current = new Date();
+
+while (true) {
+  const key = getWeekKey(current);
+
+  if (uniqueWeeks.includes(key)) {
+    weeklyStreak++;
+    current.setDate(current.getDate() - 7);
+  } else {
+    break;
+  }
+}
+
   return (
     <div className="timer-page">
       {isDistracted && (
@@ -502,8 +556,16 @@ function Timer({ onLogout }) {
             <div className="stat-number">{formatTime(totalDistractionSeconds)}</div>
             <div className="stat-label">Total Distraction Time</div>
           </div>
-        </div>
-      </section>
+          <div className="stat-box">
+            <div className="stat-number">{dailyStreak}</div>
+             <div className="stat-label">Daily Streak</div>
+             </div>
+             <div className="stat-box">
+              <div className="stat-number">{weeklyStreak}</div>
+              <div className="stat-label">Weekly Streak</div>
+              </div>
+              </div>
+          </section>
 
     </div>
 
