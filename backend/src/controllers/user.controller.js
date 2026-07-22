@@ -4,30 +4,35 @@ import jwt from "jsonwebtoken"
 const registerUser = async (req, res) => {
     try {
         const { username, email, password } = req.body
+        const normalizedUsername = username?.trim()
+        const normalizedEmail = email?.trim().toLowerCase()
 
-        // basic validation
-        
-        if (!username || !email || !password) {
-            return res.status(400).json({ message: "All fields are important!" })
+        if (!normalizedUsername || !normalizedEmail || !password) {
+            return res.status(400).json({ message: "Please fill in all required fields." })
         }
 
-        // check if user exists already
-
-        const existing = await User.findOne({ email: email.toLowerCase() })
-        if (existing) {
-            return res.status(400).json({ message: "User already exists!"} )
+        if (password.length < 8) {
+            return res.status(400).json({ message: "Password must be at least 8 characters." })
         }
 
-        // create user
+        const emailExists = await User.findOne({ email: normalizedEmail })
+        if (emailExists) {
+            return res.status(409).json({ message: "That email is already registered. Please use a different email." })
+        }
+
+        const usernameExists = await User.findOne({ username: normalizedUsername.toLowerCase() })
+        if (usernameExists) {
+            return res.status(409).json({ message: "That username is already taken. Please choose another one." })
+        }
 
         const user = await User.create({
-            username,
-            email: email.toLowerCase(),
-            password: password,
+            username: normalizedUsername,
+            email: normalizedEmail,
+            password,
             loggedIn: false
         })
 
-        res.status(201).json({ 
+        res.status(201).json({
             message: "User registered successfully!",
             user: { id: user._id, email: user.email, username: user.username }
         })
