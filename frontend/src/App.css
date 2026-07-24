@@ -115,6 +115,26 @@ button:hover {
   transform: translateY(-2px);
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+  background: #edf1ed;
+  border-color: #b7c2b8;
+  color: #667069;
+}
+
+button:disabled:hover {
+  background: #edf1ed;
+  transform: none;
+}
+
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  background: #f1f4f2;
+}
+
 .top-logout {
   position: fixed;
   top: 18px;

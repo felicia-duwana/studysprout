@@ -290,6 +290,15 @@ function Timer({ onLogout }) {
 
   const growthStages = ["sprout", "young", "bud", "half", "flower"];
   const totalDuration = customMinutes * 60;
+  const isSessionOngoing = isRunning || isDistracted;
+
+  const handleSetTimer = () => {
+    if (isSessionOngoing) return;
+
+    const minutes = Math.max(15, customMinutes);
+    setCustomMinutes(minutes);
+    setTimeLeft(minutes * 60);
+  };
 
   const addFlowerToGarden = (flower) => {
     const isGardenFull = displayGarden.filter(Boolean).length >= 5;
@@ -520,14 +529,16 @@ const weeklyChartData = getWeeklyChartData();
                 min="15"
                 max="120"
                 value={customMinutes}
+                disabled={isSessionOngoing}
                 onChange={(e) => setCustomMinutes(Math.max(15, Number(e.target.value)))}
               />
-              <button onClick={() => {
-                stopTimer()
-                const minutes = Math.max(15, customMinutes)
-                setCustomMinutes(minutes)
-                setTimeLeft(minutes * 60)
-              }}>Set Timer</button>
+              <button
+                type="button"
+                disabled={isSessionOngoing}
+                onClick={handleSetTimer}
+              >
+                Set Timer
+              </button>
             </div>
             <div className="timer-circle">
               <span className="timer-display">{formatTime(timeLeft)}</span>
